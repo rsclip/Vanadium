@@ -51,8 +51,18 @@ Gets the md5 hash (other hashes will be supported in later versions) of file_pat
 `vdm.hashfile('C:/Path/to/file.exe')`
 
 #### *vdm.sdownload(url, file_name)*
+Uses threading to download a file without waiting. Example:
+`vdm.sdownload('C:/Path/to/another/galaxy-background.png,', 'C:/Users/Admin/Desktop/background.png)`
+
+#### *vdm.download(url, file_name)*
+Downloads a file from the internet, but waits until completed. Example:
+`vdm.sdownload('C:/Path/to/another/galaxy-background.png,', 'C:/Users/Admin/Desktop/background.png)`
+
+#### *vdm.cfile( **NOT COMPLETED*
 
 # Updates
 
 # Todo
 - Support other hashes for hashfile
+- Different hashes
+- Generate with letters, optional
