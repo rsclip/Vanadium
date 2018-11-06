@@ -58,7 +58,8 @@ Uses threading to download a file without waiting. Example:
 Downloads a file from the internet, but waits until completed. Example:
 `vdm.sdownload('C:/Path/to/another/galaxy-background.png,', 'C:/Users/Admin/Desktop/background.png)`
 
-#### *vdm.cfile( **NOT COMPLETED*
+#### *vdm.cfile(file_path, body [optional], modify_type [optional])*
+Creates an empty file. If you want to create a file and with text
 
 # Updates
 
