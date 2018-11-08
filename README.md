@@ -21,7 +21,21 @@ If the module imports normally without errors, you're ready to use it.
 ## Features
 Here is a full list and explanation of each function and class.
 
+### Hashes
+Hashes supported in the module:
+- 5 sha256 sha224 ripemd160 blake2b blake2s sha512
+- md5
+- sha256
+- sha224
+- ripemd160
+- blake2b [needs key and digest_size]
+- blake2s [needs key and digest size]
+- sha512
+
+
 #### *vdm.generate(length)*
+__Use vdm.genCode instead. Supports characters, sizes and lengths.__
+*Possibility of deprecation*
 Generates a number code with 5 letters, and a `-` in between. This will repeat for your length. Example:
 ```
 >>> print(vdm.generate(3).code)
@@ -30,6 +44,7 @@ Generates a number code with 5 letters, and a `-` in between. This will repeat f
 
 
 #### *vdm.get_output(command)*
+__*Deprecation Notice:* This feature has been removed since 0.0.2. Use *dm.getoutput(command, isShell=True)* nstead.__
 Gets the output of a command, like in subprocess. There will not be a console and to get the output, use .command. Example: 
 ```
 output = vdm.get_output('net view').command
@@ -38,6 +53,7 @@ very long output
 
 
 #### *vdm.getforeground()*
+*__Deprecation Notice*: Replaced with vdm.vwindow() instead.__
 Gets the current foreground/active window. Name of the window is saved to .command. Example:
 ```
 >>> foreground = vdm.getforeground().window
@@ -52,10 +68,129 @@ by is optional. It joins a list and converts it to a string. String is at .strin
 >>> print(vdm.joinlist(list).string)
 'hello there'
 ```
-#### *vdm.hashfile(file_path)*
-Gets the md5 hash (other hashes will be supported in later versions) of file_path. The file_path should be the path to the file, not the directory. Example:
-`vdm.hashfile('C:/Path/to/file.exe')`
 
+#### *vdm.winver()*
+Gets the windows version the user is running. Takes time to intiate. Example:
+```
+>>> ver = vdm.winver()
+>>> ver.osname
+Microsoft Windows 8.1
+>>> ver.version
+6.3.9600 N/A Build 9600
+```
+More features could be supported in future versions.
+
+
+#### *vdm.bsod()*
+__Read the license file__
+Forces a Blue Screen Of Death. Requires elevation and user confirmation through a dialog. Use for experimental purposes
+Usage:
+`vdm.bsod()`
+
+
+#### *vdm.unzip(file_path, extract_to, extension, pw=None [Optional])*
+Unzips a file. Currently supports .zip and .rar. Extract_to should be the directory it will extract to.
+Enter the extension of the file, either `.zip` or `.rar`. If the rar file requires a password, you can add the extra argument
+`pw=`. Example:
+`vdm.unzip('documents.rar', 'stuff/documents/', '.rar', pw='SuperSecretPassword321')`
+
+
+#### *vdm.notify(title, content, icon=None, duration=5)*
+Creates a notification. Looks best in Windows 10. title is the title of the notification. Content is the body. If you would like to specify an icon to go with it, enter the path of it in `icon=`. To set the duration of the notification, add `duration=`. Example:
+`vdm.notify('Reminder', 'Take cat out of freezer', icon='C:/Meow.ico', duration=4)`
+
+
+#### *vdm.sequence(expression, length, string=True)*
+Generates a sequence based on the expression. You need to choose a length (integer). If you want it to generate in integers, add the extra argument `string=False`. Use `n` as the term. Example:
+```
+>>> vdm.sequence('4n + 4', 10, string=False`
+[8, 12, 16, 20, 24, 28, 32, 36, 40, 44]
+```
+
+#### *vdm.mousepos()*
+Gets the current position of the mouse. Quite simple. Example: `print(vdm.mousepos())`
+
+
+#### *vdm.bringWindow(window)*
+Doing this manually can be hard, finding the handler by searching through countless windows. This will simplify it and require just a window name. This will bring a window to the front (foreground/active window). Example:
+`vdm.bringWindow('Python 3.6.5 Shell')`
+
+
+#### *vdm.isAdmin()*
+Created for the *vdm.elevate()* command. Can be used, though.
+returns `True` if the user is admin. Returns `False` if not. Example:
+```
+if vdm.isAdmin():
+      print("Hello Admin!")
+else:
+      print("ew where's the admin")
+```
+
+#### *vdm.runAsAdmin(cmdLine=None, wait=True)*
+__Created for the *vdm.elevate()* command. Cannot be used. If you want to elevate your program, use vdm.elevate()__
+Runs as admin
+
+
+#### *vdm.elevate()*
+Elevates the program to administrator privileges. Uses a UAC Prompt so the user needs to enter their password. If you want, here's an example:
+`vdm.elevate()`
+
+
+#### *vdm.fileattrib(file_path, args)*
+Adds or removes a file attribute. For args, use this format:
+`+` to Set an attribute
+`-` to clear an attribute
+`R` Read-Only
+`A` Archive
+`S` System ffile
+`H` Hidden
+Example:
+```
+vdm.fileattrib('myfile.png', '+H') #This will hide the file
+vdm.fileattrib('myfile.png', '-R') #This will remove the "Read only" attribute
+vdm.fileattrib('*.*', '+H') #Hides all files with all extensions.
+```
+To apply this to a bunch of files, use a list.
+
+
+#### *vdm.pyversion()*
+Returns the python version. It would look something like `"Python 3.6.5"`. Example:
+```
+>>> if vdm.pyversion() == 'Python 3.6.5':
+...   print("Supported by Vanadium")
+... else:
+...   print("Not supported by Vanadium :(")
+...
+Supported by Vanadium
+```
+
+#### *vdm.getoutput(command, isShell=True)*
+Gets the output of a command, default is shell. No console windows opening, and it's quick. `command` must be string. Example:
+`users = vdm.getoutput('net user')`
+
+
+#### *vdm.genCode(size=5, length=3, chars=None, sep='-')*
+Optionally, you can just use `vdm.genCode()`, but you can customize it. `size` is the amount of characters. Length is the amount of 
+of groups of characters. You can specify which characters to use in `chars=`, and a seperator. Default characters is `string.ascii_uppercase + string.digits`. Example:
+```
+>>> vdm.genCode()
+'H0BO1-ORDTK-Q9XQG'
+>>> vdm.genCode(size=3, length=5, chars=string.ascii_uppercase + string.digits, sep=' ')
+'AG3 R3C M7Q VIS 0VB'
+```
+
+#### *vdm.hashfile(file_path, hash, key=None, digest_size=None)*
+Gets the hash of a file. Multiple hashes are supported. See the top for the list. digest_size is the length of the ciphered text.
+Example: 
+`vdm.hashfile('C:/Path/to/file.exe', 'md5')`
+`vdm.hashfile('pewpew.exe', 'blake2b', key='souperpassword', digest_size=12)`
+
+
+#### *vdm.hash(string, hash, key=None, digest_size=None)*
+Gets the hash of a string. Multiple hashes are supported. See the top for the list. digest_size is the length of the ciphered text.
+Example:
+`vdm.hash('fbiopenup', 'sha224')`
+`vdm.hash('fbiopenup', 'blake2s', key='closedown', digest_size=16)`
 
 #### *vdm.sdownload(url, file_name)*
 Uses threading to download a file without waiting. Example:
@@ -67,7 +202,7 @@ Downloads a file from the internet, but waits until completed. Example:
 `vdm.sdownload('C:/Path/to/another/galaxy-background.png,', 'C:/Users/Admin/Desktop/background.png)`
 
 
-#### *vdm.cfile(file_path, body [optional], modify_type [optional])*
+#### *vdm.cfile(file_path, body=None, modify_type='w')*
 Creates an empty file. If you want to create a file with text, enter the Body in string. Example:
 `vdm.cfile('C:/Path/to/file.txt', body='Hello')`
 
@@ -78,6 +213,7 @@ Sends an email from the account you enter to the recipient, and uses the subject
 
 
 #### *vdm.python3()*
+__*Deprecation Notice:* This feature has been deprecated since 0.0.2. Use *vdm.pyversion()* instead.__
 If the person is running Python 3 (At the moment this seems quite useless, so in a future update it will differentiate between different python versions such as 3.6 and 3.7) it will return `True`. Example:
 ```if vdm.python3(): #If they are running python 3..
       print("Running python 3")
@@ -95,6 +231,7 @@ Decodes an encoded string based on the key. The key must be correct. Example:
 
 
 #### *vdm.comparefile(first_file_path, second_file_path)*
+__Hashes are not supported here :(__
 Must be the absolute file path. This will compare 2 files very quickly and will return `True` if they are exactly the same. Example:
 ```
 if vdm.comparefile('notavirus.exe', 'virus.exe'):
@@ -147,7 +284,7 @@ This probably wont be very useful inside programs but it could be -- it's more o
  ```
  
  
-#### *vdm.delfile(file_path)*
+#### *vdm.delfile(file_path, secure=False)*
  __Just a quick note:__ *Please read the `LICENSE` file. Do not use this for malicious purposes.*
  Can delete a file or files. To delete a file, just specify a file path, like this:
  `vdm.delfile('passwords.txt')`
@@ -160,6 +297,7 @@ This probably wont be very useful inside programs but it could be -- it's more o
  or
  `vdm.delfile(['passwords.txt', 'creditcards.txt', 'highschoolpicture.png'])`
  
+ If you would like to securely delete files so they can't be recovered, you can add the extra argument `secure=True`. This is irreversible.
  
 #### *vdm.isadmin()*
 Returns `True` if the user is an admin. Returns `False` if otherwise. Example:
@@ -174,18 +312,35 @@ else:
  
 # Updates
 
+## 0.0.2
+- Changed getforeground() to vwindow()
+- Added functions to vwindow
+- Added winver(). Gets the windows OS Name and Version
+- Added bsod() | Please read the license, forces a Blue Screen of Death with user permission
+- Added unzip. Unzips a file, .rar and .zip supported only
+- Added notify. Uses toast to create a notification. Looks better on Windows 10
+- Added sequence. Generates a sequence based on a equation. Doesn't support powers
+- Added mousepos. Returns the mouse position.
+- Added bringWindow. Brings a window to foreground, without specifying handlers and stuff.
+- Added isAdmin. This is for the elevate() command.
+- Added runAsAdmin. This is for the elevate() command.
+- Added elevate. Elevates the permissions of the running program with UAC Prompt. Supports IDLE too.
+- Updated delfile. Added secure deletion to completely get rid of files, but takes long.
+- Added fileattrib. Changes the attributes of files.
+- Added pyversion. Successor to python3(). Gets the exact python version.
+- Updated getoutput. Changed from class to function, and gets output. Extra argument "isShell=True"
+- Added genCode. Successor to generate, although generate is still available. Generates a code with a custom simze, custom length and                  custom characters. If chars are not specified, it will generate numbers and letters.
+- Updated hash file. Supports multiple hashes, includes argument for key and digest size.
+- Added hash. Hashes a string, supports multiple hashes, includes arguments for key and digest size.
+- Updated get_output. Faster and simpler, and supports shell.
+- Rewritten isAdmin() to support runAsAdmin(), to help with elevate(). Use
+
+__GitHub__
+- Issues templates and suggestions. Please contribute to Vanadium :D
+
 ## 0.0.1    
 - Created
 - Added basically everything
 
-# Todo
-- Support other hashes for hashfile
-- Hash strings
-- Different hashes
-- Generate with letters, optional
-- Secure hashing (SHA-2)
-- Differentiate between 3.6, 3.7 ect.
-- Change attributes of file(s)
-- Self-elevate (and in python idle)
-- Secure file deletion
-- Delete all files in a directory, optionally securely.
+# Todo [Updated only on GitHub]
+- Add power support for sequence
