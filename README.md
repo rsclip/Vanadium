@@ -320,6 +320,9 @@ else:
  
 # Updates
 
+## 0.0.2.1
+- Fixed updates on PyPi
+
 ## 0.0.2
 - Changed getforeground() to vwindow()
 - Added functions to vwindow
