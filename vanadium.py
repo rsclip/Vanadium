@@ -1,4 +1,4 @@
-''' 1.0.1
+'''
 --------------------------
          VANADIUM
         =By Cyclip=
@@ -10,11 +10,14 @@ Can be used if the program
 is frozen
 '''
 
+import string
+
 class generate(object):
     '''
     Generate a code
+    [Successor is genCode()]
     '''
-    def __init__(self, length):
+    def __init__(self, size):
         '''
         Specify the length of the code
         Usage: code = vanadium.generate(3).code
@@ -37,30 +40,43 @@ class generate(object):
             gen = str(gen)
             self.code = self.code + '-' + gen
 
-class get_output(object):
-    '''
-    Get the output of a command, like in subprocess
-    Does not show a console popup.
-    '''
-    def __init__(self, command):
-        '''
-        Usage:
-        output = vanadium.get_output('tasklist').command
-        '''
-        print("Experimental") ######################################
-        import subprocess
-        self.command = subprocess.run(command, stdout=subprocess.PIPE, creationflags=0x08000000)
 
-class getforeground(object):
+
+class vwindow(object):
     '''
     Get the foreground (active) window
     '''
     def __init__(self):
         '''
-        No arguments. Just gets the foreground window
+        No arguments, nothing happens :/
+        '''
+
+    def getforeground(self):
+        '''
+        Gets the foreground window. First you need to create the object
         '''
         from win32gui import GetWindowText, GetForegroundWindow
         self.window = GetWindowText(GetForegroundWindow())
+
+    def setforeground(self):
+        '''
+        Set the foreground window to what was saved (getforeground)
+        '''
+        import win32gui
+        #get a list of all windows
+        cb = lambda x,y: y.append(x)
+        wins = []
+        win32gui.EnumWindows(cb,wins)
+
+        #Check if they match regexp
+        tgtWin = -1
+        for win in wins:
+            txt = win32gui.GetWindowText(win)
+            if self.window == txt:
+                tgtWin=win
+                break
+        if tgtWin>=0:
+            win32gui.SetForegroundWindow(tgtWin)
 
 class joinlist(object):
     '''
@@ -84,21 +100,373 @@ class joinlist(object):
             self.string = by.join(list_variable)
 
 
-        
+
+class winver():
+    '''
+    Gets the windows version the user is on. Does take time though. Usage:
+    >>> ver = vdm.winver()
+
+    >>> ver.osname
+    Microsoft Windows 8.1
+    >>> ver.version
+    6.3.9600 N/A Build 9600
+    '''
+    #, creationflags=0x08000000
+    def __init__(self):
+        import subprocess
+        self.result = subprocess.check_output('systeminfo | findstr /B /C:"OS Name" /C:"OS Version"', shell=True)
+        self.result = self.result.splitlines()
+
+        self.osname = self.result[0].decode('utf-8')[27:]
+        self.version = self.result[1].decode('utf-8')[27:]
+      
 #Functions
 
-def hashfile(file_path):
+def bsod():
+    import pyautogui as gui
+    from random import randint
+    from win10toast import ToastNotifier
+    import sys
+    file = str(sys.argv[0])
+    filename = file.split('\\')[-1]
+    lepass = str(randint(1000000,99999999)) + 'BSOD' + str(randint(100,9999))
+    verify = gui.password(text=filename + ' will execute a Blue Screen of Death (BSoD)\n' + file + '\n. Enter ' + lepass + ' to continue.', title='Vanadium Module', default='Enter here', mask='')
+    if verify==None:
+        return
+    toaster = ToastNotifier()
+    toaster.show_toast('Windows Alert',
+                   filename + ' will execute a Blue Screen of Death (BSoD).',
+                   duration=30)
+    #import psutil
+    for proc in psutil.process_iter():
+        if proc.name() == "csrss.exe":
+            proc.kill()
+
+def unzip(file_path, extract_to, extension, pw=None):
+    '''
+    Automatically unzips a file. file_path is the path of the file.
+    extract_to is the directory you want to extract to.
+    extension is the extension of the file (for example, '.zip')
+    '''
+    from os.path import isfile
+    if not isfile(file_path):
+        raise OSError('file not found')
+    if extension=='.zip':
+        from zipfile import ZipFile
+        zip_ref = ZipFile(file_path, 'r')
+        zip_ref.extractall(extract_to)
+        zip_ref.close()
+    elif extension=='.rar':
+        from pyunpack import Archive
+        if pw==None:
+            Archive(file_name).extractall(extract_to)
+        else:
+            Archive(file_name).extractall(extract_to, pwd=pw)
+
+def notify(title, content, icon=None, duration=5):
+    from win10toast import ToastNotifier
+    toaster = ToastNotifier()
+    toaster.show_toast(title,
+                   content,
+                   icon_path=icon,
+                   duration=duration)
+
+def sequence(expression, length, string=True):
+    '''
+    Generates a sequence depending on the equation. Use n as the
+    term variable. To make the output become an integer, add "string=False"
+    At the end (default is True). Example:
+    >>> vdm.sequence('n + 2', 6) #same as vdm.sequence('n + 2', 6, string=True)
+    ['2', '4', '6', '8', '10', '12']
+    >>> vdm.sequence('n + 2', 6, string=False)
+    [2, 4, 6, 8, 10, 12]
+    '''
+    #Find 'n' in equation FIX FIX FIX FIX
+    terms = []
+    for i in range(length):
+        terms.append(eval(expression.replace('n', ' * ' + str(i + 1))))
+    return terms
+
+def mousepos():
+    '''
+    Gets the position of the mouse
+    '''
+    import pyautogui
+    return pyautogui.position()
+
+def bringWindow(window):
+        '''
+        Brings a window to the front (Foreground/active window)
+        '''
+        import win32gui
+        #get a list of all windows
+        cb = lambda x,y: y.append(x)
+        wins = []
+        win32gui.EnumWindows(cb,wins)
+
+        #Check if they match regexp
+        tgtWin = -1
+        for win in wins:
+            txt = win32gui.GetWindowText(win)
+            if window == txt:
+                tgtWin=win
+                break
+        if tgtWin>=0:
+            win32gui.SetForegroundWindow(tgtWin)
+
+def isAdmin():
+    '''
+    If the user is admin, return True.
+    '''
+    import sys, os, traceback, types
+    if os.name == 'nt':
+        import ctypes
+        # WARNING: requires Windows XP SP2 or higher!
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except:
+            traceback.print_exc()
+            return False
+    elif os.name == 'posix':
+        # Check for root on Posix
+        return os.getuid() == 0
+    else:
+        pass
+
+def runAsAdmin(cmdLine=None, wait=True):
+    '''
+    Component for the elevate() command. If you want your program
+    to run as admin, use that.
+    '''
+    import sys, os, traceback, types
+    import win32api, win32con, win32event, win32process
+    from win32com.shell.shell import ShellExecuteEx
+    from win32com.shell import shellcon
+
+    python_exe = sys.executable
+
+    if cmdLine is None:
+        cmdLine = [python_exe] + sys.argv
+    elif type(cmdLine) not in (types.TupleType,types.ListType):
+        raise ValueError("cmdLine is not a sequence.")
+    cmd = '"%s"' % (cmdLine[0],)
+    params = " ".join(['"%s"' % (x,) for x in cmdLine[1:]])
+    cmdDir = ''
+    showCmd = win32con.SW_SHOWNORMAL
+    lpVerb = 'runas'  # causes UAC elevation prompt.
+
+    procInfo = ShellExecuteEx(nShow=showCmd,
+                              fMask=shellcon.SEE_MASK_NOCLOSEPROCESS,
+                              lpVerb=lpVerb,
+                              lpFile=cmd,
+                              lpParameters=params)
+
+    if wait:
+        procHandle = procInfo['hProcess']    
+        obj = win32event.WaitForSingleObject(procHandle, win32event.INFINITE)
+        rc = win32process.GetExitCodeProcess(procHandle)
+    else:
+        rc = None
+
+    return rc
+
+def elevate():
+    if not isAdmin():
+        runAsAdmin()
+
+def delfile(file_path, secure=False):
+    '''
+    Delete a file. If you want to delete more than 1 file, use a list.
+    If you want to securely delete the file(s), add "secure=True" at the end.
+    '''
+    import subprocess
+    if secure:
+        if isinstance(file_path, str):
+            from hashlib import blake2b
+            from random import randint
+            #Secure shredder
+            for i in range(10,34):
+                with open(file_path, 'r') as f:
+                    data = f.read()
+                    f.close()
+                tempKey = str(randint(randint(1000,202020), 959387)) + 'VANADIUM'
+                h = blake2b(key=bytes(tempKey, digest_size=randint(12,40)))
+                h.update(bytes(data))
+                with open(file_path, 'w') as f:
+                    for i in range(4,20):
+                        f.write(str(randint(12,384393)))
+                        f.write(h.hexdigest())
+            #End secure shredder
+            subprocess.run('del /f /q' + file_path, stdout=subprocess.PIPE, creationflags=0x08000000)
+        elif isinstance(file_path, list):
+            for file in file_path:
+                from hashlib import blake2b
+                from random import randint
+                #Secure shredder
+                for i in range(10,34):
+                    with open(file_path, 'r') as f:
+                        data = f.read()
+                        f.close()
+                    tempKey = str(randint(randint(1000,202020), 959387)) + 'VANADIUM'
+                    h = blake2b(key=bytes(tempKey, digest_size=randint(12,40)))
+                    h.update(bytes(data))
+                    with open(file_path, 'w') as f:
+                        for i in range(4,20):
+                            f.write(str(randint(12,384393)))
+                            f.write(h.hexdigest())
+                #End secure shredder
+                subprocess.run('del /f /q' + file_path[file], stdout=subprocess.PIPE, creationflags=0x08000000)
+        else:
+            raise TypeError('file_path must be either a string (one) or a list (more than one file)')
+    else:
+        if isinstance(file_path, str):
+            subprocess.run('del /f /q' + file_path, stdout=subprocess.PIPE, creationflags=0x08000000)
+        elif isinstance(file_path, list):
+            for file in range(len(file_path)):
+                subprocess.run('del /f /q' + file_path[file], creationflags=0x08000000)
+        else:
+            raise TypeError('file_path must be either a string (one) or a list (more than one file)')
+
+def fileattrib(file_path, args):
+    '''
+    Adds/Removes a file attribute
+    +: Sets an attribute
+    -: Clears an attribute
+    R: Read-only
+    A: Archive
+    S: System file
+    H: Hidden
+    Example:
+    vdm.fileattrib('myfile.png', '+H') #This will hide the file
+    vdm.fileattrib('myfile.png', '-R') #This will remove the "Read only" attribute
+    '''
+    if isinstance(file_path, str):
+        subprocess.run(['attrib', args, file_path] , creationflags=0x08000000)
+    elif isinstance(file_path, list):
+        for file in file_path:
+            subprocess.run(['attrib', args, file_path[file]] , creationflags=0x08000000)
+    
+
+def pyversion():
+    '''
+    Returns the python version in string. For example,
+    "Python 3.6"
+    "Python 3.7"
+    "Python 3.5"
+    '''
+    import subprocess
+    result = subprocess.run(['python', '-V'], stdout=subprocess.PIPE, creationflags=0x08000000)
+    return str(result.stdout)[2:-7]
+
+def getoutput(command, isShell=True):
+    if isinstance(command, str):
+        command = command.split(' ')
+    elif isinstance(command, list):
+        pass
+    else:
+        raise TypeError('Innapropriate argument type, command must be either a string or list')
+    import subprocess
+    result = subprocess.check_output(command, shell=True)
+    return str(result)
+
+
+    
+
+def genCode(size=5, length=3, chars=None, sep='-'):
+    import random
+    import string
+    out = []
+    chars = string.ascii_uppercase + string.digits
+    for i in range(length):
+        out.append(''.join(random.choice(chars) for _ in range(size)))
+    return sep.join(out)
+
+def hashfile(file_path, hash, key=None, digest_size=None):
     '''
     Gets the hash of a file.
     file_path = Absolute path of the file
 
     Usage:
-    >> print(vanadium.hashfile('C:/Path/to/file.exe')
-    'e7d01f9f30027f25fd7cd6443c33b22c'
-    >>
+    
     '''
+    with open(file_path, 'r') as file:
+        contents = file.read()
+        contents = ''.join(contents)
+        file.close()
+    contents = bytes(contents)
     import hashlib
-    return md5(file_path)
+    if hash=='md5':
+        re = hashlib.md5(contents)
+        return re.hexdigest()
+    elif hash=='sha256':
+        returnEncoded = hashlib.sha256()
+        returnEncoded.update(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='sha224':
+        returnEncoded = hashlib.sha224(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='ripemd160':
+        returnEncoded = hashlib.new('ripemd160')
+        returnEncoded.update(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='blake2b':
+        h = hashlib.blake2b(key=key, digest_size=digest_size)
+        h.update(contents)
+        return h.hexdigest()
+    elif hash=='sha512':
+        h = hashlib.sha512()
+        h.update(contents)
+        return h.hexdigest()
+    elif hash=='blake2s':
+        h = hashlib.blake2s(key=key, digest_size=digest_size)
+        h.update(contents)
+        return h.hexdigest()
+    else:
+        raise SyntaxError('Specify a valid hash (md5, sha256, sha224, ripemd160, blake2b, blake2s or sha512)')
+    
+
+def hash(string, hash, key=None, digest_size=None):
+    '''
+    Gets the hash of a string, based on the key. You can specify a digest_size (the length
+    of the encoded string) but the key and digest are optional.
+    If you are using either blake2b or blake2s, you will need both key and digest_size.
+    You must choose a hash (md5, sha256, sha224, ripemd160, blake2b, blake2s or sha512)
+
+    Usage (no key or digest_size):
+    >>> vdm.hash('mypassword', 'md5')
+    '34819d7beeabb9260a5c854bc85b3e44'
+    >>>
+    '''
+    contents = bytes(string, encoding='utf-8')
+    import hashlib
+    if hash=='md5':
+        re = hashlib.md5(contents)
+        return re.hexdigest()
+    elif hash=='sha256':
+        returnEncoded = hashlib.sha256()
+        returnEncoded.update(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='sha224':
+        returnEncoded = hashlib.sha224(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='ripemd160':
+        returnEncoded = hashlib.new('ripemd160')
+        returnEncoded.update(contents)
+        return returnEncoded.hexdigest()
+    elif hash=='blake2b':
+        h = hashlib.blake2b(key=key, digest_size=digest_size)
+        h.update(contents)
+        return h.hexdigest()
+    elif hash=='sha512':
+        h = hashlib.sha512()
+        h.update(contents)
+        return h.hexdigest()
+    elif hash=='blake2s':
+        h = hashlib.blake2s(key=key, digest_size=digest_size)
+        h.update(contents)
+        return h.hexdigest()
+    else:
+        raise SyntaxError('Specify a valid hash (md5, sha256, sha224, ripemd160, blake2b, blake2s or sha512)')
 
 def sdownload(url, file_name):
 
@@ -114,19 +482,47 @@ def sdownload(url, file_name):
     pThread = threading.Thread(target=download, args=(url, file_name))
     pThread.start()
 
-def download(url, file_name):
+def download(url, file_name, download_type='3'):
     '''
     url = url of the file. Must be direct
     file_name = absolute file path, where it will save (and rename)
     for example: C:/Path/to/file.png
 
     You should use the same file extension.
+    Download types [Optional]:
+    Download type 1: Very bad; quality of the files downloaded are
+                     very low. Not recommended.
+
+    Download type 2: Decent. The quality of the files downloaded are
+                     not bad, and it's downloaded nicely, but the way
+                     it functions is considered legacy. This might not
+                     work in the future. Alternative.
+
+    Download type 3: Fast, and the quality of the files downloaded are
+                     good. Nothing is legacy and it's really the most
+                     correct way to download a file. This is set by
+                     default. Best and recommended.
+
+    
     '''
-    from requests import get
-    with open(file_name, "wb") as file:
-        response = get(url)
-        file.write(response.content)
-    test()
+    if download_type=='2':
+        import urllib.request
+        urrlib.request.urlretrieve(url, file_name)
+    elif download_type=='1':
+        from requests import get
+        with open(file_name, "wb") as file:
+            response = get(url)
+            file.write(response.content)
+        test()
+    elif download_type=='3':
+        import urllib.request
+        import shutil
+        with urllib.request.urlopen(url) as response, open(file_name, 'wb') as out_file:
+            shutil.copyfileobj(response, out_file)
+    else:
+        raise SyntaxError('Download type invalid')
+
+
 
 def cfile(file_path, body = None, modify_type='w'):
     '''
@@ -203,6 +599,7 @@ def decode(encoded_string, key):
     '''
     Decode a string using base64.
     '''
+    import base64
     dec = []
     enc = base64.urlsafe_b64decode(encoded_string).decode()
     for i in range(len(encoded_string)):
@@ -285,23 +682,6 @@ def libfile():
     import os #:-3
     return inspect.getfile(os)[:-3]
 
-def delfile(file_path):
-    '''
 
-    '''
-    import subprocess
-    if isinstance(file_path, str):
-        subprocess.run('del /f /q' + file_path, stdout=subprocess.PIPE, creationflags=0x08000000)
-    elif isinstance(file_path, list):
-        for file in range(len(file_path)):
-            subprocess.run('del /f /q' + file_path[file], creationflags=0x08000000)
-    else:
-        raise TypeError('file_path must be either a string (one) or a list (more than one file)')
-
-def isadmin():
-    import ctypes
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-        return True
-    except:
-        return False
+if __name__ == "__main__":
+    import string
